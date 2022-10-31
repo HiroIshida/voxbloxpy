@@ -6,6 +6,7 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
+#include "voxblox/core/common.h"
 #include "voxblox/core/esdf_map.h"
 #include "voxblox/core/layer.h"
 #include "voxblox/core/voxel.h"
@@ -26,12 +27,7 @@ class PyEsdfMap {
   int voxels_per_side_;
 
  public:
-  PyEsdfMap(float voxel_size, int voxels_per_side) {
-    EsdfMap::Config esdf_config;
-    esdf_config.esdf_voxel_size = voxel_size;
-    esdf_config.esdf_voxels_per_side = voxels_per_side;
-    this->esdf_map_.reset(new EsdfMap(esdf_config));
-  }
+  PyEsdfMap(float voxel_size, int voxels_per_side) : PyEsdfMap(Layer<EsdfVoxel>(voxel_size, voxels_per_side)) {}
 
   PyEsdfMap(const Layer<EsdfVoxel>& esdf_layer) {
     this->esdf_map_.reset(new EsdfMap(esdf_layer));
@@ -39,8 +35,26 @@ class PyEsdfMap {
     this->voxels_per_side_ = esdf_layer.voxels_per_side();
   }
 
-  std::vector<double> get_sd_batch(const std::vector<std::vector<float>> pts,
-                                   double fill_value) {
+  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud)
+  {
+    const auto p = Point(camera_pose[0], camera_pose[1], camera_pose[2]);
+    const auto q = Quaternion(
+        camera_pose[3], camera_pose[4], camera_pose[5], camera_pose[6]);
+    const auto transform = Transformation(q, p);
+
+    const size_t n_point = point_cloud.size();
+
+    auto point_cloud_eigen = AlignedVector<Point>(n_point);
+    for(size_t i = 0; i < n_point; ++i) {
+      const auto & pt = point_cloud[i];
+      Point point_eigen(pt[0], pt[1], pt[2]);
+      point_cloud_eigen[i] = point_eigen;
+    }
+  }
+
+  std::vector<double> get_sd_batch(const std::vector<std::vector<double>> pts,
+                                   double fill_value)
+  {
     std::vector<double> values(pts.size());
     for (size_t i = 0; i < pts.size(); ++i) {
       const auto& pt = pts[i];
@@ -121,6 +135,8 @@ PYBIND11_MODULE(_voxbloxpy, m) {
   py::class_<PyEsdfMap>(m, "EsdfMap")
       .def(py::init<float, int>())
       .def("get_sd_batch", &PyEsdfMap::get_sd_batch)
+      .def("update", &PyEsdfMap::update)
       .def_readonly("voxel_size", &PyEsdfMap::voxel_size_)
       .def_readonly("voxels_per_side", &PyEsdfMap::voxels_per_side_);
+
 }
