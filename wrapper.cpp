@@ -33,14 +33,14 @@ class PyTsdfMap {
   PyTsdfMap(float voxel_size, int voxels_per_side) : PyTsdfMap(Layer<TsdfVoxel>(voxel_size, voxels_per_side)) {}
 
   PyTsdfMap(const Layer<TsdfVoxel>& tsdf_layer) {
-    this->tsdf_map_.reset(new TsdfMap(tsdf_layer));
-    this->voxel_size_ = tsdf_layer.voxel_size();
-    this->voxels_per_side_ = tsdf_layer.voxels_per_side();
+    tsdf_map_.reset(new TsdfMap(tsdf_layer));
+    voxel_size_ = tsdf_layer.voxel_size();
+    voxels_per_side_ = tsdf_layer.voxels_per_side();
 
     TsdfIntegratorBase::Config config;
     config.default_truncation_distance = 4 * tsdf_layer.voxel_size();
     config.integrator_threads = 1;
-    this->tsdf_integrator_.reset(new FastTsdfIntegrator(config, this->tsdf_map_->getTsdfLayerPtr()));
+    tsdf_integrator_.reset(new FastTsdfIntegrator(config, tsdf_map_->getTsdfLayerPtr()));
   }
 
   void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud_std, bool is_camera_coords)
@@ -68,7 +68,7 @@ class PyTsdfMap {
     }else{
       point_cloud_camera = std::move(point_cloud);
     }
-    this->tsdf_integrator_->integratePointCloud(transform, point_cloud_camera, colors);
+    tsdf_integrator_->integratePointCloud(transform, point_cloud_camera, colors);
   }
 
 };
@@ -85,21 +85,21 @@ class PyEsdfMap {
   PyEsdfMap(float voxel_size, int voxels_per_side) : PyEsdfMap(Layer<EsdfVoxel>(voxel_size, voxels_per_side)) {}
 
   PyEsdfMap(const Layer<EsdfVoxel>& esdf_layer) {
-    this->esdf_map_.reset(new EsdfMap(esdf_layer));
-    this->voxel_size_ = esdf_layer.voxel_size();
-    this->voxels_per_side_ = esdf_layer.voxels_per_side();
-    this->tsdf_map_.reset(new PyTsdfMap(esdf_layer.voxel_size(), esdf_layer.voxels_per_side()));
+    esdf_map_.reset(new EsdfMap(esdf_layer));
+    voxel_size_ = esdf_layer.voxel_size();
+    voxels_per_side_ = esdf_layer.voxels_per_side();
+    tsdf_map_.reset(new PyTsdfMap(esdf_layer.voxel_size(), esdf_layer.voxels_per_side()));
 
     EsdfIntegrator::Config esdf_config;
-    const auto tsdf_layer_ptr = this->tsdf_map_->tsdf_map_->getTsdfLayerPtr();
+    const auto tsdf_layer_ptr = tsdf_map_->tsdf_map_->getTsdfLayerPtr();
     const auto esdf_layer_ptr = esdf_map_->getEsdfLayerPtr();
-    this->esdf_integrator_.reset(new EsdfIntegrator(esdf_config, tsdf_layer_ptr, esdf_layer_ptr));
+    esdf_integrator_.reset(new EsdfIntegrator(esdf_config, tsdf_layer_ptr, esdf_layer_ptr));
   }
 
   void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud, bool is_camera_coords)
   {
-    this->tsdf_map_->update(camera_pose, point_cloud, is_camera_coords);
-    this->esdf_integrator_->updateFromTsdfLayer(true);
+    tsdf_map_->update(camera_pose, point_cloud, is_camera_coords);
+    esdf_integrator_->updateFromTsdfLayer(true);
   }
 
   std::vector<double> get_sd_batch(const std::vector<std::vector<double>> pts,
