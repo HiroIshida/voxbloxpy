@@ -1,0 +1,3 @@
+[submodule "minkindr"]
+	path = minkindr
+	url = https://github.com/ethz-asl/minkindr.git
