@@ -22,8 +22,10 @@ target_link_libraries(_voxbloxpy PRIVATE voxblox)
 
 set(CMD_SITE_PKG "import site; import sys;sys.stdout.write(site.getusersitepackages())")
 
-#execute_process(
-#    set(PYTHON_EXECUTABLE "/bin/python3")
-#    COMMAND ${PYTHON_EXECUTABLE} -c "${CMD_SITE_PKG}"
-#    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_INSTALL_DIR
-#    )
+execute_process(
+    COMMAND ${PYTHON_EXECUTABLE} -c "${CMD_SITE_PKG}"
+    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_INSTALL_DIR
+    )
+
+install(TARGETS _voxbloxpy DESTINATION ${PYTHON_SITE_PACKAGES_INSTALL_DIR})
+message("destination site-packages:" ${PYTHON_SITE_PACKAGES_INSTALL_DIR})
