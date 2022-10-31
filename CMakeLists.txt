@@ -50,7 +50,19 @@ target_link_libraries(voxblox PRIVATE glog)
 target_link_libraries(voxblox PRIVATE gflags)
 target_link_libraries(voxblox PRIVATE protobuf)
 
-option(BUILD_TEST "build google test" ON)
+add_subdirectory(pybind11)
+pybind11_add_module(_voxbloxpy wrapper/wrapper.cpp)
+target_link_libraries(_voxbloxpy PRIVATE voxblox)
+
+set(CMD_SITE_PKG "import site; import sys;sys.stdout.write(site.getusersitepackages())")
+
+#execute_process(
+#    set(PYTHON_EXECUTABLE "/bin/python3")
+#    COMMAND ${PYTHON_EXECUTABLE} -c "${CMD_SITE_PKG}"
+#    OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_INSTALL_DIR
+#    )
+
+option(BUILD_TEST "build google test" OFF)
 if(BUILD_TEST)
     find_package(GTest REQUIRED)
     enable_testing()
