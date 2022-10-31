@@ -70,7 +70,7 @@ void SimulationWorld::generateSdfFromWorld(FloatingPoint max_dist,
 }
 
 template <>
-void SimulationWorld::setVoxel(FloatingPoint dist, const Color& color,
+inline void SimulationWorld::setVoxel(FloatingPoint dist, const Color& color,
                                TsdfVoxel* voxel) const {
   voxel->distance = static_cast<float>(dist);
   voxel->color = color;
@@ -79,7 +79,7 @@ void SimulationWorld::setVoxel(FloatingPoint dist, const Color& color,
 
 // Color ignored.
 template <>
-void SimulationWorld::setVoxel(FloatingPoint dist, const Color& /*color*/,
+inline void SimulationWorld::setVoxel(FloatingPoint dist, const Color& /*color*/,
                                EsdfVoxel* voxel) const {
   voxel->distance = static_cast<float>(dist);
   voxel->observed = true;
