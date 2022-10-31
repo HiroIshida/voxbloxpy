@@ -17,6 +17,7 @@ pkg_check_modules(LIBGLOG REQUIRED libglog)
 pkg_check_modules(LIBGFLAGS REQUIRED gflags)
 
 include_directories(include/)
+include_directories(./minkindr/minkindr/include/)
 
 add_library(voxblox STATIC
   src/alignment/icp.cc
@@ -43,4 +44,28 @@ add_library(voxblox STATIC
 )
 target_link_libraries(voxblox PRIVATE glog)
 target_link_libraries(voxblox PRIVATE gflags)
-target_include_directories(voxblox PRIVATE ./minkindr/minkindr/include/)
+
+option(BUILD_TEST "build google test" ON)
+if(BUILD_TEST)
+    find_package(GTest REQUIRED)
+    enable_testing()
+
+    function(setup_voxblox_test test_name test_src)
+        add_executable(${test_name} ${test_src})
+        target_link_libraries(${test_name} voxblox ${GTEST_LIBRARIES} pthread)
+        target_include_directories(${test_name} PUBLIC ${GTEST_INCLUDE_DIRS})
+        gtest_discover_tests(${test_name})
+    endfunction()
+
+    setup_voxblox_test(test_approx_hash_array test/test_approx_hash_array.cc)
+    setup_voxblox_test(test_bucket_queue test/test_bucket_queue.cc)
+    #setup_voxblox_test(test_clear_spheres test/test_clear_spheres.cc)
+    setup_voxblox_test(test_layer test/test_layer.cc)
+    #setup_voxblox_test(test_layer_utils test/test_layer_utils.cc)
+    #setup_voxblox_test(test_load_esdf test/test_load_esdf.cc)
+    #setup_voxblox_test(test_merge_integration test/test_merge_integration.cc)
+    #setup_voxblox_test(test_protobuf test/test_protobuf.cc)
+    #setup_voxblox_test(test_sdf_integration test/test_sdf_integrators.cc)
+    #setup_voxblox_test(test_tsdf_interpolator test/test_tsdf_interpolator.cc)
+    setup_voxblox_test(test_tsdf_map test/test_tsdf_map.cc)
+endif(BUILD_TEST)
