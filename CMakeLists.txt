@@ -13,6 +13,7 @@ ADD_DEFINITIONS(-DEIGEN_NO_DEBUG)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 find_package(PkgConfig)
+find_package(Protobuf REQUIRED)
 pkg_check_modules(LIBGLOG REQUIRED libglog)
 pkg_check_modules(LIBGFLAGS REQUIRED gflags)
 
@@ -42,9 +43,12 @@ add_library(voxblox STATIC
   src/utils/protobuf_utils.cc
   src/utils/timing.cc
   src/utils/voxel_utils.cc
+  src/compiled_proto/Block.pb.cc
+  src/compiled_proto/Layer.pb.cc
 )
 target_link_libraries(voxblox PRIVATE glog)
 target_link_libraries(voxblox PRIVATE gflags)
+target_link_libraries(voxblox PRIVATE protobuf)
 
 option(BUILD_TEST "build google test" ON)
 if(BUILD_TEST)
@@ -60,13 +64,13 @@ if(BUILD_TEST)
 
     setup_voxblox_test(test_approx_hash_array test/test_approx_hash_array.cc)
     setup_voxblox_test(test_bucket_queue test/test_bucket_queue.cc)
-    #setup_voxblox_test(test_clear_spheres test/test_clear_spheres.cc)
+    setup_voxblox_test(test_clear_spheres test/test_clear_spheres.cc)
     setup_voxblox_test(test_layer test/test_layer.cc)
-    #setup_voxblox_test(test_layer_utils test/test_layer_utils.cc)
+    setup_voxblox_test(test_layer_utils test/test_layer_utils.cc)
     #setup_voxblox_test(test_load_esdf test/test_load_esdf.cc)
-    #setup_voxblox_test(test_merge_integration test/test_merge_integration.cc)
-    #setup_voxblox_test(test_protobuf test/test_protobuf.cc)
-    #setup_voxblox_test(test_sdf_integration test/test_sdf_integrators.cc)
+    setup_voxblox_test(test_merge_integration test/test_merge_integration.cc)
+    setup_voxblox_test(test_protobuf test/test_protobuf.cc)
+    setup_voxblox_test(test_sdf_integration test/test_sdf_integrators.cc)
     setup_voxblox_test(test_tsdf_interpolator test/test_tsdf_interpolator.cc)
     setup_voxblox_test(test_tsdf_map test/test_tsdf_map.cc)
 endif(BUILD_TEST)
