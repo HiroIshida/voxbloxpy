@@ -8,6 +8,7 @@
 
 #include "voxblox/core/common.h"
 #include "voxblox/core/esdf_map.h"
+#include "voxblox/core/tsdf_map.h"
 #include "voxblox/core/layer.h"
 #include "voxblox/core/voxel.h"
 #include "voxblox/integrator/esdf_integrator.h"
@@ -20,9 +21,63 @@
 namespace py = pybind11;
 using namespace voxblox;
 
+
+class PyTsdfMap {
+ public:
+  std::shared_ptr<TsdfMap> tsdf_map_;
+  std::unique_ptr<TsdfIntegratorBase> tsdf_integrator_;
+  float voxel_size_;
+  int voxels_per_side_;
+
+ public:
+  PyTsdfMap(float voxel_size, int voxels_per_side) : PyTsdfMap(Layer<TsdfVoxel>(voxel_size, voxels_per_side)) {}
+
+  PyTsdfMap(const Layer<TsdfVoxel>& tsdf_layer) {
+    this->tsdf_map_.reset(new TsdfMap(tsdf_layer));
+    this->voxel_size_ = tsdf_layer.voxel_size();
+    this->voxels_per_side_ = tsdf_layer.voxels_per_side();
+
+    TsdfIntegratorBase::Config config;
+    config.default_truncation_distance = 4 * tsdf_layer.voxel_size();
+    config.integrator_threads = 1;
+    this->tsdf_integrator_.reset(new FastTsdfIntegrator(config, this->tsdf_map_->getTsdfLayerPtr()));
+  }
+
+  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud_std, bool is_camera_coords)
+  {
+    const auto p = Point(camera_pose[0], camera_pose[1], camera_pose[2]);
+    const auto q = Quaternion(
+        camera_pose[3], camera_pose[4], camera_pose[5], camera_pose[6]);
+    const auto transform = Transformation(q, p);
+
+    const size_t n_point = point_cloud_std.size();
+
+    Pointcloud point_cloud = AlignedVector<Point>(n_point);
+    auto colors = AlignedVector<Color>(n_point);
+    for(size_t i = 0; i < n_point; ++i) {
+      const auto & pt = point_cloud_std[i];
+      Point point(pt[0], pt[1], pt[2]);
+      point_cloud[i] = point;
+      colors[i] = Color(); // currently color is just black
+    }
+
+    Pointcloud point_cloud_camera;
+
+    if(is_camera_coords) {
+      transformPointcloud(transform.inverse(), point_cloud, &point_cloud_camera);
+    }else{
+      point_cloud_camera = std::move(point_cloud);
+    }
+    this->tsdf_integrator_->integratePointCloud(transform, point_cloud_camera, colors);
+  }
+
+};
+
 class PyEsdfMap {
  public:
   std::shared_ptr<EsdfMap> esdf_map_;
+  std::shared_ptr<EsdfIntegrator> esdf_integrator_;  // using unique_ptr is more natual but it implicitly delete the copy constructor... so ...
+  std::shared_ptr<PyTsdfMap> tsdf_map_;
   float voxel_size_;
   int voxels_per_side_;
 
@@ -33,23 +88,18 @@ class PyEsdfMap {
     this->esdf_map_.reset(new EsdfMap(esdf_layer));
     this->voxel_size_ = esdf_layer.voxel_size();
     this->voxels_per_side_ = esdf_layer.voxels_per_side();
+    this->tsdf_map_.reset(new PyTsdfMap(esdf_layer.voxel_size(), esdf_layer.voxels_per_side()));
+
+    EsdfIntegrator::Config esdf_config;
+    const auto tsdf_layer_ptr = this->tsdf_map_->tsdf_map_->getTsdfLayerPtr();
+    const auto esdf_layer_ptr = esdf_map_->getEsdfLayerPtr();
+    this->esdf_integrator_.reset(new EsdfIntegrator(esdf_config, tsdf_layer_ptr, esdf_layer_ptr));
   }
 
-  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud)
+  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud, bool is_camera_coords)
   {
-    const auto p = Point(camera_pose[0], camera_pose[1], camera_pose[2]);
-    const auto q = Quaternion(
-        camera_pose[3], camera_pose[4], camera_pose[5], camera_pose[6]);
-    const auto transform = Transformation(q, p);
-
-    const size_t n_point = point_cloud.size();
-
-    auto point_cloud_eigen = AlignedVector<Point>(n_point);
-    for(size_t i = 0; i < n_point; ++i) {
-      const auto & pt = point_cloud[i];
-      Point point_eigen(pt[0], pt[1], pt[2]);
-      point_cloud_eigen[i] = point_eigen;
-    }
+    this->tsdf_map_->update(camera_pose, point_cloud, is_camera_coords);
+    this->esdf_integrator_->updateFromTsdfLayer(true);
   }
 
   std::vector<double> get_sd_batch(const std::vector<std::vector<double>> pts,
@@ -131,6 +181,12 @@ PYBIND11_MODULE(_voxbloxpy, m) {
   m.doc() = "voxblox python wrapper";
   m.def("setup_tsdf_layer", &setup_tsdf_layer);
   m.def("get_test_esdf", &get_test_esdf);
+
+  py::class_<PyTsdfMap>(m, "TsdfMap")
+      .def(py::init<float, int>())
+      .def("update", &PyTsdfMap::update)
+      .def_readonly("voxel_size", &PyTsdfMap::voxel_size_)
+      .def_readonly("voxels_per_side", &PyTsdfMap::voxels_per_side_);
 
   py::class_<PyEsdfMap>(m, "EsdfMap")
       .def(py::init<float, int>())
