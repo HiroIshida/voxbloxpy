@@ -96,6 +96,26 @@ class PyEsdfMap {
     esdf_integrator_.reset(new EsdfIntegrator(esdf_config, tsdf_layer_ptr, esdf_layer_ptr));
   }
 
+  int getNumberOfAllocatedBlocks()
+  {
+    return esdf_map_->getEsdfLayerPtr()->getNumberOfAllocatedBlocks();
+  }
+
+  std::vector<std::vector<double>> get_block_origins()
+  {
+    std::vector<std::vector<double>> origins;
+    BlockIndexList block_list;
+    auto esdf_layer_ptr = esdf_map_->getEsdfLayerPtr();
+    esdf_layer_ptr->getAllAllocatedBlocks(&block_list);
+    for (const BlockIndex& block_index : block_list) {
+      const Block<EsdfVoxel>& block = esdf_layer_ptr->getBlockByIndex(block_index);
+      const Point block_origin = block.origin();
+      const std::vector<double> origin{block_origin.x(), block_origin.y(), block_origin.z()};
+      origins.push_back(origin);
+    }
+    return origins;
+  }
+
   void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud, bool is_camera_coords)
   {
     tsdf_map_->update(camera_pose, point_cloud, is_camera_coords);
@@ -192,6 +212,8 @@ PYBIND11_MODULE(_voxbloxpy, m) {
       .def(py::init<float, int>())
       .def("get_sd_batch", &PyEsdfMap::get_sd_batch)
       .def("update", &PyEsdfMap::update)
+      .def("get_num_alloc_block", &PyEsdfMap::getNumberOfAllocatedBlocks)
+      .def("get_block_origins", &PyEsdfMap::get_block_origins)
       .def_readonly("voxel_size", &PyEsdfMap::voxel_size_)
       .def_readonly("voxels_per_side", &PyEsdfMap::voxels_per_side_);
 
