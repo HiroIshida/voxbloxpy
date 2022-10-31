@@ -18,6 +18,7 @@ pkg_check_modules(LIBGFLAGS REQUIRED gflags)
 
 include_directories(include/)
 include_directories(./minkindr/minkindr/include/)
+include_directories(./eigen_checks/include/)
 
 add_library(voxblox STATIC
   src/alignment/icp.cc
@@ -66,6 +67,6 @@ if(BUILD_TEST)
     #setup_voxblox_test(test_merge_integration test/test_merge_integration.cc)
     #setup_voxblox_test(test_protobuf test/test_protobuf.cc)
     #setup_voxblox_test(test_sdf_integration test/test_sdf_integrators.cc)
-    #setup_voxblox_test(test_tsdf_interpolator test/test_tsdf_interpolator.cc)
+    setup_voxblox_test(test_tsdf_interpolator test/test_tsdf_interpolator.cc)
     setup_voxblox_test(test_tsdf_map test/test_tsdf_map.cc)
 endif(BUILD_TEST)
