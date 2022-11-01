@@ -46,3 +46,6 @@ jobs:
               run: |
                   python3 example/ground_truth_cylinder.py
                   python3 example/incremetal_update.py
+                  pip3 install gdown
+                  cd example/dataset && bash ./download_dataset.sh && cd ../..
+                  python3 example/real_data.py
