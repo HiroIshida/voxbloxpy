@@ -79,8 +79,8 @@ class EsdfMap:
 
     @classmethod
     def create(cls, voxel_size: float, voxels_per_side: int = 16) -> "EsdfMap":
-        _voxbloxpy.EsdfMap(voxel_size, voxels_per_side)
-        return cls(EsdfMap)
+        esdf_map_raw = _voxbloxpy.EsdfMap(voxel_size, voxels_per_side)
+        return cls(esdf_map_raw)
 
     def update(self, camera_pose: CameraPose, point_cloud: np.ndarray) -> None:
         assert point_cloud.ndim == 2
