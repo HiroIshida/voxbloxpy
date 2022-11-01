@@ -1,17 +1,17 @@
 import argparse
 import numpy as np
 
-from voxbloxpy import CameraPose, EsdfMap
+from voxbloxpy import CameraPose, EsdfMap, Grid
 
 
 def create_esdf(sphere: bool = True, debug_view: bool = True):
-    quat_wxyz = np.array([0.0, 1.0, 0.0, 0.0])
-    pos = np.array([-1.0, 0.0, 0.0])
+    quat_wxyz = np.array([1.0, 0.0, 0.0, 0.0])
+    pos = np.array([-1.0, 0.6, 0.0])
     camera_pose = CameraPose(pos, quat_wxyz)
 
     r_sphere = 0.5
-    ylin = np.linspace(-1.0, 1.0, 100)
-    zlin = np.linspace(-1.0, 1.0, 100)
+    ylin = np.linspace(-1.0, 1.0, 400)
+    zlin = np.linspace(-1.0, 1.0, 400)
     y_grid, z_grid = np.meshgrid(ylin, zlin)
 
     if sphere:
@@ -48,25 +48,9 @@ if __name__ == "__main__":
     args = parser.parse_args()
     visualize: bool = args.visualize
 
-
     esdf = create_esdf(sphere=True, debug_view=False)
-    block_origins = esdf.get_block_origins()
-    print(len(block_origins))
-
-    info = esdf.get_voxel_info()
-    info0 = info.filter(-0.1, -0.0)
-    info1 = info.filter(0.0, 0.1)
-    info2 = info.filter(0.1, 0.2)
-    info3 = info.filter(0.2, 0.3)
-    info4 = info.filter(0.3, 0.4)
 
     if visualize:
-        import matplotlib.pyplot as plt
-        fig = plt.figure()
-        ax = fig.add_subplot(projection="3d")
-        ax.scatter(info0.origins[:, 0], info0.origins[:, 1], info0.origins[:, 2], c="yellow")
-        ax.scatter(info1.origins[:, 0], info1.origins[:, 1], info1.origins[:, 2], c="red")
-        ax.scatter(info2.origins[:, 0], info2.origins[:, 1], info2.origins[:, 2], c="blue")
-        ax.scatter(info3.origins[:, 0], info3.origins[:, 1], info3.origins[:, 2], c="green")
-        ax.scatter(info4.origins[:, 0], info4.origins[:, 1], info4.origins[:, 2], c="black")
-        plt.show()
+        grid = Grid(np.array([-1.0, -1.0, -1.0]), np.array([1.0, 1.0, 0.5]), (60, 60, 60))
+        grid_sdf = esdf.get_grid_sdf(grid)
+        grid_sdf.render_volume()
