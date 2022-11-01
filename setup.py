@@ -1,5 +1,3 @@
-import subprocess
-import sys
 from skbuild import setup
 
 install_requires = [

@@ -1,4 +1,5 @@
 import argparse
+
 import numpy as np
 
 from voxbloxpy import CameraPose, EsdfMap, Grid
@@ -29,12 +30,6 @@ def create_esdf(sphere: bool = True, debug_view: bool = True):
         pts = np.zeros((len(pts_x), 3))
         pts[:, 0] = pts_x
         pts[:, 1:] = pts_yz_plane
-
-    if debug_view:
-        fig = plt.figure()
-        ax = fig.add_subplot(projection="3d")
-        ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2])
-        plt.show()
 
     esdfmap = EsdfMap.create(0.05, 32)
     esdfmap.update(camera_pose, pts)

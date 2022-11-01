@@ -1,4 +1,5 @@
 import argparse
+
 import numpy as np
 
 from voxbloxpy import Grid, get_test_esdf
