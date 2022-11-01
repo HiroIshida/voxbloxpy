@@ -3,31 +3,27 @@ import time
 from _voxbloxpy import get_test_esdf
 import plotly.graph_objects as go
 
-esdf = get_test_esdf()
+esdf = get_test_esdf(0.05, 10, 640, 480)
 print("finish creating esdf")
 
-xlin = np.linspace(-3.0, 3.0, 100)
-ylin = np.linspace(-3.0, 3.0, 100)
-zlin = np.linspace(-2.0, 4.0, 100)
+N = 50
+xlin = np.linspace(-3.0, 3.0, N)
+ylin = np.linspace(-3.0, 3.0, N)
+zlin = np.linspace(-2.0, 4.0, N)
 X, Y, Z = np.meshgrid(xlin, ylin, zlin)
 pts_global = np.array(list(zip(X.flatten(), Y.flatten(), Z.flatten())))
 
 ts = time.time()
-values = esdf.get_sd_batch(pts_global, 100.0)
-print(values)
+values = np.array(esdf.get_sd_batch(pts_global, 100.0))
+values[values>99.0] = np.nan
 
-
-fig = go.Figure(data=go.Isosurface(
-    x=X.flatten(),
-    y=Y.flatten(),
-    z=Z.flatten(),
+fig = go.Figure(data=go.Volume(
+    x=X.flatten(), y=Y.flatten(), z=Z.flatten(),
     value=values,
-    isomin=-1.0,
+    isomin=-0.5,
     isomax=2.0,
-    opacity=0.1,
+    opacity=0.05,
     surface_count=10,
-    colorbar_nticks=5,
-    colorscale='Plotly3',
-    caps=dict(x_show=False, y_show=False)
+    colorscale='jet'
     ))
 fig.show()

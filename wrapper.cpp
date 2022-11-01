@@ -174,10 +174,16 @@ class PyEsdfMap {
   }
 };
 
-PyEsdfMap get_test_esdf() {
-  float voxel_size = 0.01;
-  int voxels_per_side = 30;
+PyEsdfMap get_test_esdf(float voxel_size, int num_poses, int resol_x, int resol_y) {
+  // originally 
+  // voxel_size = 0.1 
+  // num_poses = 50
+  // resol_x = 320
+  // resol_y = 240
+  
+  int voxels_per_side = 16;
   float esdf_max_distance = 4.0f;
+  float truncation_distance = 4 * voxel_size; 
   SimulationWorld world;
 
   // Create a test environment.
@@ -192,14 +198,79 @@ PyEsdfMap get_test_esdf() {
       cylinder_center, cylinder_radius, cylinder_height, Color::Red())));
   world.addGroundLevel(0.0);
 
-  // Finally, get the GT.
-  std::unique_ptr<Layer<EsdfVoxel>> esdf_gt;
-  esdf_gt.reset(new Layer<EsdfVoxel>(voxel_size, voxels_per_side));
-  world.generateSdfFromWorld(esdf_max_distance, esdf_gt.get());
+  // Next, generate poses evenly spaced in a circle around the object.
+  FloatingPoint radius = 6.0;
+  FloatingPoint height = 2.0;
+  AlignedVector<Transformation> poses;
+  poses.reserve(num_poses);
 
-  // convert to esdfmap
-  const auto esdf_map = PyEsdfMap(*esdf_gt);
-  esdf_map.esdf_map_->block_size();
+  FloatingPoint max_angle = 2 * M_PI;
+
+  FloatingPoint angle_increment = max_angle / num_poses;
+  for (FloatingPoint angle = 0.0; angle < max_angle;
+       angle += angle_increment) {
+    // Generate a transformation to look at the center pose.
+    Point position(radius * sin(angle), radius * cos(angle), height);
+    Point facing_direction = cylinder_center - position;
+
+    FloatingPoint desired_yaw = 0.0;
+    if (std::abs(facing_direction.x()) > 1e-4 ||
+        std::abs(facing_direction.y()) > 1e-4) {
+      desired_yaw = atan2(facing_direction.y(), facing_direction.x());
+    }
+
+    // Face the desired yaw and pitch forward a bit to get some of the floor.
+    Quaternion rotation =
+        Quaternion(Eigen::AngleAxis<FloatingPoint>(-0.1, Point::UnitY())) *
+        Eigen::AngleAxis<FloatingPoint>(desired_yaw, Point::UnitZ());
+
+    poses.emplace_back(Transformation(rotation, position));
+  }
+  std::cout << "**created camera pose list. total num is " << poses.size() << std::endl;
+
+  // TSDF layer + integrator
+  TsdfIntegratorBase::Config config;
+  config.default_truncation_distance = truncation_distance;
+  config.integrator_threads = 1;
+  Layer<TsdfVoxel> tsdf_layer(voxel_size, voxels_per_side);
+  MergedTsdfIntegrator tsdf_integrator(config, &tsdf_layer);
+
+  // ESDF layers
+  Layer<EsdfVoxel> incremental_layer(voxel_size, voxels_per_side);
+
+  EsdfIntegrator::Config esdf_config;
+  esdf_config.max_distance_m = esdf_max_distance;
+  esdf_config.default_distance_m = esdf_max_distance;
+  esdf_config.min_distance_m = truncation_distance / 2.0;
+  esdf_config.min_diff_m = 0.0;
+  esdf_config.full_euclidean_distance = false;
+  esdf_config.add_occupied_crust = false;
+  esdf_config.multi_queue = true;
+  EsdfIntegrator incremental_integrator(esdf_config, &tsdf_layer,
+                                        &incremental_layer);
+
+  Eigen::Vector2i depth_camera_resolution_= Eigen::Vector2i(resol_x, resol_y);
+  float fov_h_rad = 2.61799;
+  float max_dist = 10.0;
+  for (size_t i = 0; i < poses.size(); i++) {
+    std::cout << "**iter num " << i << std::endl;
+    Pointcloud ptcloud, ptcloud_C;
+    Colors colors;
+
+    world.getPointcloudFromTransform(poses[i], depth_camera_resolution_,
+                                      fov_h_rad, max_dist, &ptcloud, &colors);
+    transformPointcloud(poses[i].inverse(), ptcloud, &ptcloud_C);
+    tsdf_integrator.integratePointCloud(poses[i], ptcloud_C, colors);
+    std::cout << "**update tsdf" << std::endl;
+
+    // Update the incremental integrator.
+    constexpr bool clear_updated_flag = true;
+    incremental_integrator.updateFromTsdfLayer(clear_updated_flag);
+    std::cout << "**update esdf" << std::endl;
+  }
+
+  const auto esdf_map = PyEsdfMap(incremental_layer);
+  std::cout << "**finish creating esdf map"<< std::endl;
   return esdf_map;
 }
 
