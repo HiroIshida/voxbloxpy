@@ -114,7 +114,7 @@ class PyEsdfMap {
     std::vector<std::vector<double>>,
     std::vector<double>,
     std::vector<bool>
-    > get_voxel_info()
+    > get_voxel_info(bool only_observed)
   {
     std::vector<std::vector<double>> origins;
     std::vector<double> values;
@@ -132,11 +132,14 @@ class PyEsdfMap {
 
       for (size_t linear_index = 0; linear_index < num_voxels_per_block; ++linear_index) {
         const Point & coord = block.computeCoordinatesFromLinearIndex(linear_index);
-        origins.push_back(std::vector<double>{coord.x(), coord.y(), coord.z()});
 
         const EsdfVoxel & voxel = block.getVoxelByLinearIndex(linear_index);
-        values.push_back(voxel.distance);
-        observed.push_back(voxel.observed);
+        const bool is_pushable = only_observed && voxel.observed || !only_observed;
+        if(is_pushable){
+          origins.push_back(std::vector<double>{coord.x(), coord.y(), coord.z()});
+          values.push_back(voxel.distance);
+          observed.push_back(voxel.observed);
+        }
       }
     }
 
