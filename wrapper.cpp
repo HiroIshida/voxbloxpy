@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <iostream>
+#include <utility>
 #include <vector>
 
 #include <pybind11/eigen.h>
@@ -99,6 +100,39 @@ class PyEsdfMap {
   int getNumberOfAllocatedBlocks()
   {
     return esdf_map_->getEsdfLayerPtr()->getNumberOfAllocatedBlocks();
+  }
+
+  std::tuple<
+    std::vector<std::vector<double>>,
+    std::vector<double>,
+    std::vector<bool>
+    > get_voxel_info()
+  {
+    std::vector<std::vector<double>> origins;
+    std::vector<double> values;
+    std::vector<bool> observed;
+
+    auto esdf_layer_ptr = esdf_map_->getEsdfLayerPtr();
+
+    size_t vps = esdf_layer_ptr->voxels_per_side();
+    size_t num_voxels_per_block = vps * vps * vps;
+
+    BlockIndexList block_list;
+    esdf_layer_ptr->getAllAllocatedBlocks(&block_list);
+    for (const BlockIndex& block_index : block_list) {
+      const Block<EsdfVoxel>& block = esdf_layer_ptr->getBlockByIndex(block_index);
+
+      for (size_t linear_index = 0; linear_index < num_voxels_per_block; ++linear_index) {
+        const Point & coord = block.computeCoordinatesFromLinearIndex(linear_index);
+        origins.push_back(std::vector<double>{coord.x(), coord.y(), coord.z()});
+
+        const EsdfVoxel & voxel = block.getVoxelByLinearIndex(linear_index);
+        values.push_back(voxel.distance);
+        observed.push_back(voxel.observed);
+      }
+    }
+
+    return std::make_tuple(origins, values, observed);
   }
 
   std::vector<std::vector<double>> get_block_origins()
@@ -214,6 +248,7 @@ PYBIND11_MODULE(_voxbloxpy, m) {
       .def("update", &PyEsdfMap::update)
       .def("get_num_alloc_block", &PyEsdfMap::getNumberOfAllocatedBlocks)
       .def("get_block_origins", &PyEsdfMap::get_block_origins)
+      .def("get_voxel_info", &PyEsdfMap::get_voxel_info)
       .def_readonly("voxel_size", &PyEsdfMap::voxel_size_)
       .def_readonly("voxels_per_side", &PyEsdfMap::voxels_per_side_);
 
