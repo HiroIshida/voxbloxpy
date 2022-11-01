@@ -1,4 +1,4 @@
-import matplotlib.pyplot as plt
+import argparse
 import numpy as np
 
 from voxbloxpy import CameraPose, EsdfMap
@@ -42,22 +42,31 @@ def create_esdf(sphere: bool = True, debug_view: bool = True):
     return esdfmap
 
 
-esdf = create_esdf(sphere=True, debug_view=False)
-block_origins = esdf.get_block_origins()
-print(len(block_origins))
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--visualize", action="store_true", help="visualize")
+    args = parser.parse_args()
+    visualize: bool = args.visualize
 
-info = esdf.get_voxel_info()
-info0 = info.filter(-0.1, -0.0)
-info1 = info.filter(0.0, 0.1)
-info2 = info.filter(0.1, 0.2)
-info3 = info.filter(0.2, 0.3)
-info4 = info.filter(0.3, 0.4)
 
-fig = plt.figure()
-ax = fig.add_subplot(projection="3d")
-ax.scatter(info0.origins[:, 0], info0.origins[:, 1], info0.origins[:, 2], c="yellow")
-ax.scatter(info1.origins[:, 0], info1.origins[:, 1], info1.origins[:, 2], c="red")
-ax.scatter(info2.origins[:, 0], info2.origins[:, 1], info2.origins[:, 2], c="blue")
-ax.scatter(info3.origins[:, 0], info3.origins[:, 1], info3.origins[:, 2], c="green")
-ax.scatter(info4.origins[:, 0], info4.origins[:, 1], info4.origins[:, 2], c="black")
-plt.show()
+    esdf = create_esdf(sphere=True, debug_view=False)
+    block_origins = esdf.get_block_origins()
+    print(len(block_origins))
+
+    info = esdf.get_voxel_info()
+    info0 = info.filter(-0.1, -0.0)
+    info1 = info.filter(0.0, 0.1)
+    info2 = info.filter(0.1, 0.2)
+    info3 = info.filter(0.2, 0.3)
+    info4 = info.filter(0.3, 0.4)
+
+    if visualize:
+        import matplotlib.pyplot as plt
+        fig = plt.figure()
+        ax = fig.add_subplot(projection="3d")
+        ax.scatter(info0.origins[:, 0], info0.origins[:, 1], info0.origins[:, 2], c="yellow")
+        ax.scatter(info1.origins[:, 0], info1.origins[:, 1], info1.origins[:, 2], c="red")
+        ax.scatter(info2.origins[:, 0], info2.origins[:, 1], info2.origins[:, 2], c="blue")
+        ax.scatter(info3.origins[:, 0], info3.origins[:, 1], info3.origins[:, 2], c="green")
+        ax.scatter(info4.origins[:, 0], info4.origins[:, 1], info4.origins[:, 2], c="black")
+        plt.show()
