@@ -92,6 +92,14 @@ class PyEsdfMap {
     tsdf_map_.reset(new PyTsdfMap(esdf_layer.voxel_size(), esdf_layer.voxels_per_side()));
 
     EsdfIntegrator::Config esdf_config;
+    esdf_config.max_distance_m = 4.0f;
+    esdf_config.default_distance_m = 4.0f;
+
+    // setting this value as this is very important especially using smaller voxels.
+    // do not use the default value.
+    const float truncation_distance = 4 * voxel_size_;  // DO NOT CHANGE
+    esdf_config.min_distance_m = truncation_distance / 2.0;  // DO NOT CHANGE
+
     const auto tsdf_layer_ptr = tsdf_map_->tsdf_map_->getTsdfLayerPtr();
     const auto esdf_layer_ptr = esdf_map_->getEsdfLayerPtr();
     esdf_integrator_.reset(new EsdfIntegrator(esdf_config, tsdf_layer_ptr, esdf_layer_ptr));
