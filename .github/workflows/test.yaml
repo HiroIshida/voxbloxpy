@@ -35,3 +35,14 @@ jobs:
               run: |
                   cd build
                   ctest --verbose
+
+            - name: Build python module
+              run: |
+                  export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/lib/x86_64-linux-gnu/pkgconfig"
+                  pip3 install scikit-build
+                  pip3 install  .
+
+            - name: Test python module
+              run: |
+                  python3 example/ground_truth_cylinder.py
+                  python3 example/incremetal_update.py

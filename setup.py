@@ -1,19 +1,20 @@
+import subprocess
 import sys
+from skbuild import setup
 
-# see 
-# https://github.com/scikit-build/scikit-build-sample-projects/blob/master/projects/hello-pybind11/setup.py
-try:
-    from skbuild import setup
-except ImportError:
-    raise Exception
+install_requires = [
+    "numpy",
+    "plotly",
+]
 
 setup(
     name="voxbloxpy",
     version="0.0.0",
     description="standalone voxblox python",
-    author='Hirokazu Ishida',
+    author="Hirokazu Ishida",
     license="MIT",
     packages=["voxbloxpy"],
-    package_dir={'': 'python'},
-    cmake_install_dir='python/voxbloxpy/'
-    )
+    package_dir={"": "python"},
+    cmake_install_dir="python/voxbloxpy/",
+    install_requires=install_requires,
+)
