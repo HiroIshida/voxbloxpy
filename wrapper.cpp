@@ -203,37 +203,9 @@ PyEsdfMap get_test_esdf() {
   return esdf_map;
 }
 
-void setup_tsdf_layer() {
-  float voxel_size = 0.01;
-  float truncation_distance = voxel_size * 0.4;
-  int voxels_per_side = 30;
-  float esdf_max_distance = 4.0f;
-
-  // setup tsdf
-  TsdfIntegratorBase::Config config;
-  config.default_truncation_distance = truncation_distance;
-  config.integrator_threads = 1;
-
-  Layer<TsdfVoxel> tsdf_layer(voxel_size, voxels_per_side);
-  FastTsdfIntegrator tsdf_integrator(config, &tsdf_layer);
-
-  // setup esdf
-  Layer<EsdfVoxel> batch_layer(voxel_size, voxels_per_side);
-
-  EsdfIntegrator::Config esdf_config;
-  esdf_config.max_distance_m = esdf_max_distance;
-  esdf_config.default_distance_m = esdf_max_distance;
-  esdf_config.min_distance_m = truncation_distance / 2.0;
-  esdf_config.min_diff_m = 0.0;
-  esdf_config.full_euclidean_distance = false;
-  esdf_config.add_occupied_crust = false;
-  esdf_config.multi_queue = true;
-  EsdfIntegrator batch_integrator(esdf_config, &tsdf_layer, &batch_layer);
-}
 
 PYBIND11_MODULE(_voxbloxpy, m) {
   m.doc() = "voxblox python wrapper";
-  m.def("setup_tsdf_layer", &setup_tsdf_layer);
   m.def("get_test_esdf", &get_test_esdf);
 
   py::class_<PyTsdfMap>(m, "TsdfMap")
