@@ -27,5 +27,11 @@ execute_process(
     OUTPUT_VARIABLE PYTHON_SITE_PACKAGES_INSTALL_DIR
     )
 
-install(TARGETS _voxbloxpy DESTINATION ${PYTHON_SITE_PACKAGES_INSTALL_DIR})
-message("destination site-packages:" ${PYTHON_SITE_PACKAGES_INSTALL_DIR})
+set(PIP_INSTALL ON)
+if(PIP_INSTALL)
+    install(TARGETS _voxbloxpy DESTINATION .)
+else()
+    # install to the site pakcage
+    install(TARGETS _voxbloxpy DESTINATION ${PYTHON_SITE_PACKAGES_INSTALL_DIR})
+    message("destination site-packages:" ${PYTHON_SITE_PACKAGES_INSTALL_DIR})
+endif()
