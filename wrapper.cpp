@@ -44,7 +44,7 @@ class PyTsdfMap {
     tsdf_integrator_.reset(new FastTsdfIntegrator(config, tsdf_map_->getTsdfLayerPtr()));
   }
 
-  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud_std, bool is_camera_coords)
+  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud_std)
   {
     const auto p = Point(camera_pose[0], camera_pose[1], camera_pose[2]);
     const auto q = Quaternion(
@@ -61,15 +61,7 @@ class PyTsdfMap {
       point_cloud[i] = point;
       colors[i] = Color(); // currently color is just black
     }
-
-    Pointcloud point_cloud_camera;
-
-    if(is_camera_coords) {
-      transformPointcloud(transform.inverse(), point_cloud, &point_cloud_camera);
-    }else{
-      point_cloud_camera = std::move(point_cloud);
-    }
-    tsdf_integrator_->integratePointCloud(transform, point_cloud_camera, colors);
+    tsdf_integrator_->integratePointCloud(transform, point_cloud, colors);
   }
 
 };
@@ -161,9 +153,9 @@ class PyEsdfMap {
     return origins;
   }
 
-  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud, bool is_camera_coords)
+  void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud)
   {
-    tsdf_map_->update(camera_pose, point_cloud, is_camera_coords);
+    tsdf_map_->update(camera_pose, point_cloud);
     esdf_integrator_->updateFromTsdfLayer(true);
   }
 

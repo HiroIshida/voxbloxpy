@@ -87,8 +87,7 @@ class EsdfMap:
         assert point_cloud.shape[1] == 3
 
         pose_vec = np.hstack((camera_pose.position, camera_pose.quaternion_wxyz))
-        is_wrt_camera = True  # currently False is buggy
-        self.esdf_map_.update(pose_vec, point_cloud, is_wrt_camera)
+        self.esdf_map_.update(pose_vec, point_cloud)
 
     def get_block_origins(self) -> np.ndarray:
         return self.esdf_map_.get_block_origins()
