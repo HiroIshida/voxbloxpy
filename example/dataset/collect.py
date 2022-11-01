@@ -9,7 +9,6 @@ from sensor_msgs.msg import PointCloud2
 
 from voxbloxpy import CameraPose
 
-
 rospy.init_node("pointcloud collector")
 
 
@@ -37,8 +36,7 @@ class Collector:
 
         pts = ros_numpy.point_cloud2.pointcloud2_to_xyz_array(pcloud)
 
-        # file_name = "pcloud_with_camera_pose-{}.pkl".format(time.strftime("%Y%m%d%H%M%S"))
-        file_name = "pcloud_with_camera_pose.pkl"
+        file_name = "pcloud_with_camera_pose-{}.pkl".format(time.strftime("%Y%m%d%H%M%S"))
         with open(file_name, "wb") as f:
             pickle.dump((pts, camera_pose), f)
         self.finish = True
