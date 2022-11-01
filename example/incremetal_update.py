@@ -2,7 +2,6 @@ import time
 import numpy as np
 import matplotlib.pyplot as plt
 from _voxbloxpy import EsdfMap, TsdfMap
-import plotly.graph_objects as go
 
 
 def create_esdf(sphere: bool = True, debug_view: bool = True):
@@ -37,7 +36,7 @@ def create_esdf(sphere: bool = True, debug_view: bool = True):
         ax.scatter(pts[:, 0], pts[:, 1], pts[:, 2])
         plt.show()
 
-    esdfmap = EsdfMap(0.05, 32)
+    esdfmap = EsdfMap(0.02, 32)
 
     esdfmap.update(camera_pose, pts, True)
     n = esdfmap.get_num_alloc_block()
@@ -45,27 +44,23 @@ def create_esdf(sphere: bool = True, debug_view: bool = True):
 
     return esdfmap
 
-esdf = create_esdf(sphere=False, debug_view=False)
+esdf = create_esdf(sphere=True, debug_view=False)
 block_origins = esdf.get_block_origins()
 
-xlin = np.linspace(-1.0, 1.0, 60)
-ylin = np.linspace(-1.0, 1.0, 60)
-zlin = np.linspace(-1.0, 1.0, 60)
-X, Y, Z = np.meshgrid(xlin, ylin, zlin)
-pts = np.array(list(zip(X.flatten(), Y.flatten(), Z.flatten())))
+pts, dists, observed = esdf.get_voxel_info(True);
+dists = np.array(dists)
+print(len(pts))
+pts = np.array(pts)
 
-ts = time.time()
-values = np.array(esdf.get_sd_batch(pts, 100.0))
-values[values==100.0] = np.nan
-print(time.time() - ts)
+pts1 = pts[np.logical_and(np.abs(dists) < 0.02, observed)]
+pts2 = pts[np.logical_and(np.abs(dists - 0.1) < 0.02, observed)]
+pts3 = pts[np.logical_and(np.abs(dists - 0.2) < 0.02, observed)]
+pts4 = pts[np.logical_and(np.abs(dists - 0.3) < 0.02, observed)]
 
-fig = go.Figure(data=go.Volume(
-    x=X.flatten(), y=Y.flatten(), z=Z.flatten(),
-    value=values,
-    isomin=-0.1,
-    isomax=1.0,
-    opacity=0.05,
-    surface_count=10,
-    colorscale='jet'
-    ))
-fig.show()
+fig = plt.figure()
+ax = fig.add_subplot(projection='3d')
+ax.scatter(pts1[:, 0], pts1[:, 1], pts1[:, 2], c="yellow")
+ax.scatter(pts2[:, 0], pts2[:, 1], pts2[:, 2], c="red")
+ax.scatter(pts3[:, 0], pts3[:, 1], pts3[:, 2], c="blue")
+ax.scatter(pts4[:, 0], pts4[:, 1], pts4[:, 2], c="green")
+plt.show()
