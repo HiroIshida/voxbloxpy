@@ -24,6 +24,7 @@ class EsdfNode:
     listener: TransformListener
     hook: Callable[[EsdfMap], None]
     config: EsdfNodeConfig
+    callback_running: bool
 
     def __init__(self, config: EsdfNodeConfig, hook: Optional[Callable[[EsdfMap], None]] = None):
         self.esdf = EsdfMap.create(config.voxel_size, config.voxel_per_side)
@@ -36,8 +37,11 @@ class EsdfNode:
 
         self.hook = hook
         self.config = config
+        self.callback_running = True
 
     def point_cloud_cb(self, pcloud: PointCloud2) -> None:
+        if not self.callback_running:
+            return
         target_frame = self.config.world_frame
         source_frame = pcloud.header.frame_id
         self.listener.waitForTransform(

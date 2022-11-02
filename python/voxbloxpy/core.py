@@ -38,7 +38,9 @@ class GridSDF:
     def __post_init__(self):
         assert np.prod(self.grid.sizes) == len(self.values)
 
-    def render_volume(self, isomin: float = -0.5, isomax: float = 2.0) -> None:
+    def render_volume(
+        self, isomin: float = -0.5, isomax: float = 2.0, show: bool = False
+    ) -> go.Figure:
         X, Y, Z = self.grid.get_meshgrid()
         fig = go.Figure(
             data=go.Volume(
@@ -53,7 +55,9 @@ class GridSDF:
                 colorscale="jet",
             )
         )
-        fig.show()
+        if show:
+            fig.show()
+        return fig
 
 
 @dataclass
