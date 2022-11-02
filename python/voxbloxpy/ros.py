@@ -30,7 +30,8 @@ class EsdfNode:
         self.listener = TransformListener()
         rospy.Subscriber(config.point_cloud_topic, PointCloud2, self.point_cloud_cb)
         if hook is None:
-            self.hook = lambda esdf: None  # do nothing
+            hook = lambda esdf: None  # do nothing
+        self.hook = hook
         self.config = config
 
     def point_cloud_cb(self, pcloud: PointCloud2) -> None:

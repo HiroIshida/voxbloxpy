@@ -72,6 +72,20 @@ class VoxelInfos:
         indices = self.observed & (self.dists > min_val) & (self.dists < max_val)
         return VoxelInfos(self.origins[indices], self.dists[indices], self.observed[indices])
 
+    def get_boundary(self) -> Tuple[np.ndarray, np.ndarray]:
+        """get the boundary of the observed region"""
+        observed_origins = self.origins[self.observed]
+        lb = np.min(observed_origins, axis=0)
+        ub = np.max(observed_origins, axis=0)
+        return lb, ub
+
+    def get_boundary_grid(self, grid_size: float, margin=0.1) -> Grid:
+        lb, ub = self.get_boundary()
+        lb - margin
+        ub + margin
+        grid_nums = np.ceil(((ub - lb) / grid_size) + 1).astype(int)
+        return Grid(lb, ub, grid_nums)
+
 
 @dataclass
 class EsdfMap:
