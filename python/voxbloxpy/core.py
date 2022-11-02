@@ -39,7 +39,7 @@ class GridSDF:
         assert np.prod(self.grid.sizes) == len(self.values)
 
     def render_volume(
-        self, isomin: float = -0.5, isomax: float = 2.0, show: bool = False
+        self, isomin: float = -0.5, isomax: float = 2.0, show: bool = True
     ) -> go.Figure:
         X, Y, Z = self.grid.get_meshgrid()
         fig = go.Figure(
