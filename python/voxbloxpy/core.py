@@ -52,7 +52,7 @@ class GridSDF:
                 isomax=isomax,
                 opacity=0.05,
                 surface_count=10,
-                colorscale="jet",
+                colorscale="jet_r",
             )
         )
         if show:
