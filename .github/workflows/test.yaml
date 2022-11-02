@@ -41,6 +41,11 @@ jobs:
                   export PKG_CONFIG_PATH="$PKG_CONFIG_PATH:/usr/lib/x86_64-linux-gnu/pkgconfig"
                   pip3 install scikit-build
                   pip3 install  .
+            - name: Run mypy check
+              run: |
+                  pip3 install mypy
+                  mypy --version
+                  mypy .
 
             - name: Test python module
               run: |

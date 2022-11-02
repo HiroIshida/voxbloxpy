@@ -5,7 +5,7 @@ from pathlib import Path
 
 import numpy as np
 
-from voxbloxpy import CameraPose, EsdfMap, Grid
+from voxbloxpy import EsdfMap, Grid
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -26,7 +26,6 @@ if __name__ == "__main__":
     esdf = EsdfMap.create(0.02)
     for cloud_with_camera in cloud_with_camera_list:
         pts, camera_pose = cloud_with_camera
-        camera_pose: CameraPose
         ts = time.time()
         esdf.update(camera_pose, pts)
         print("elapsed time to update esdf {}".format(time.time() - ts))
