@@ -15,4 +15,5 @@ setup(
     package_dir={"": "python"},
     cmake_install_dir="python/voxbloxpy/",
     install_requires=install_requires,
+    package_data={"voxbloxpy": ["py.typed"]},
 )
