@@ -59,6 +59,24 @@ class GridSDF:
             fig.show()
         return fig
 
+    def render_surface(self, value: float = 0.0, show: bool = True) -> go.Figure:
+        X, Y, Z = self.grid.get_meshgrid()
+        fig = go.Figure(
+            go.Isosurface(
+                x=X.flatten(),
+                y=Y.flatten(),
+                z=Z.flatten(),
+                value=self.values,
+                isomin=value,
+                isomax=value,
+                opacity=1.0,
+                surface_count=1,
+            )
+        )
+        if show:
+            fig.show()
+        return fig
+
 
 @dataclass
 class VoxelInfos:
