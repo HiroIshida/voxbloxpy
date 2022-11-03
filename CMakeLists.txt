@@ -12,7 +12,7 @@ find_package(Eigen3 REQUIRED)
 ADD_DEFINITIONS(-DEIGEN_NO_DEBUG)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
-include_directories(voxblox/include/)
+include_directories(voxblox/include/ voxblox/generated_proto/)
 include_directories(voxblox/minkindr/minkindr/include/)
 
 add_subdirectory(voxblox)

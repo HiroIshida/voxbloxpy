@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
-set(PROJECT_NAME "voxblox")
+project(voxblox)
 
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
@@ -17,7 +17,11 @@ find_package(Protobuf REQUIRED)
 pkg_check_modules(LIBGLOG REQUIRED libglog)
 pkg_check_modules(LIBGFLAGS REQUIRED gflags)
 
+# TODO: cmake has protobuf_generate_cpp function actually
+execute_process(COMMAND bash -c "protoc proto/voxblox/* --cpp_out generated_proto" WORKING_DIRECTORY ${PROJECT_SOURCE_DIR})
+
 include_directories(include/)
+include_directories(generated_proto/)
 include_directories(minkindr/minkindr/include/)
 include_directories(eigen_checks/include/)
 
@@ -43,8 +47,8 @@ add_library(voxblox STATIC
   src/utils/protobuf_utils.cc
   src/utils/timing.cc
   src/utils/voxel_utils.cc
-  src/compiled_proto/Block.pb.cc
-  src/compiled_proto/Layer.pb.cc
+  generated_proto/proto/voxblox/Block.pb.cc
+  generated_proto/proto/voxblox/Layer.pb.cc
 )
 target_link_libraries(voxblox PRIVATE glog)
 target_link_libraries(voxblox PRIVATE gflags)

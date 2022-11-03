@@ -21,7 +21,7 @@ jobs:
             - name: Install apt packages
               run: |
                   sudo apt-get install libeigen3-dev libgtest-dev
-                  sudo apt-get install libgflags-dev libgoogle-glog-dev libprotobuf-dev
+                  sudo apt-get install libgflags-dev libgoogle-glog-dev libprotobuf-dev protobuf-compiler
 
             - name: Build
               run: |

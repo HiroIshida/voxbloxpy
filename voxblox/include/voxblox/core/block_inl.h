@@ -4,7 +4,7 @@
 #include <algorithm>
 #include <vector>
 
-#include "voxblox/Block.pb.h"
+#include "proto/voxblox/Block.pb.h"
 #include "voxblox/utils/voxel_utils.h"
 
 namespace voxblox {
