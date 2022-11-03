@@ -75,9 +75,10 @@ class PyEsdfMap {
   int voxels_per_side_;
 
  public:
-  PyEsdfMap(float voxel_size, int voxels_per_side) : PyEsdfMap(Layer<EsdfVoxel>(voxel_size, voxels_per_side)) {}
+  PyEsdfMap(float voxel_size, int voxels_per_side, float clear_sphere_radius, float occupied_sphere_radius)
+    : PyEsdfMap(Layer<EsdfVoxel>(voxel_size, voxels_per_side), clear_sphere_radius, occupied_sphere_radius) {}
 
-  PyEsdfMap(const Layer<EsdfVoxel>& esdf_layer) {
+  PyEsdfMap(const Layer<EsdfVoxel>& esdf_layer, float clear_sphere_radius, float occupied_sphere_radius) {
     esdf_map_.reset(new EsdfMap(esdf_layer));
     voxel_size_ = esdf_layer.voxel_size();
     voxels_per_side_ = esdf_layer.voxels_per_side();
@@ -86,6 +87,8 @@ class PyEsdfMap {
     EsdfIntegrator::Config esdf_config;
     esdf_config.max_distance_m = 4.0f;
     esdf_config.default_distance_m = 4.0f;
+    esdf_config.clear_sphere_radius = clear_sphere_radius;
+    esdf_config.occupied_sphere_radius = occupied_sphere_radius;
 
     // setting this value as this is very important especially using smaller voxels.
     // do not use the default value.
@@ -272,7 +275,7 @@ PyEsdfMap get_test_esdf(float voxel_size, int num_poses, int resol_x, int resol_
     std::cout << "**update esdf" << std::endl;
   }
 
-  const auto esdf_map = PyEsdfMap(incremental_layer);
+  const auto esdf_map = PyEsdfMap(incremental_layer, 1.5, 4.0);
   std::cout << "**finish creating esdf map"<< std::endl;
   return esdf_map;
 }
@@ -289,7 +292,7 @@ PYBIND11_MODULE(_voxbloxpy, m) {
       .def_readonly("voxels_per_side", &PyTsdfMap::voxels_per_side_);
 
   py::class_<PyEsdfMap>(m, "EsdfMap")
-      .def(py::init<float, int>())
+      .def(py::init<float, int, float, float>())
       .def("get_sd_batch", &PyEsdfMap::get_sd_batch)
       .def("update", &PyEsdfMap::update)
       .def("get_num_alloc_block", &PyEsdfMap::getNumberOfAllocatedBlocks)

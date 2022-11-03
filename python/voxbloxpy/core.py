@@ -96,8 +96,16 @@ class EsdfMap:
     esdf_map_: Any
 
     @classmethod
-    def create(cls, voxel_size: float, voxels_per_side: int = 16) -> "EsdfMap":
-        esdf_map_raw = _voxbloxpy.EsdfMap(voxel_size, voxels_per_side)
+    def create(
+        cls,
+        voxel_size: float,
+        voxels_per_side: int = 16,
+        clear_sphere_radius: float = 1.5,
+        occupied_sphere_radius: float = 4.0,
+    ) -> "EsdfMap":
+        esdf_map_raw = _voxbloxpy.EsdfMap(
+            voxel_size, voxels_per_side, clear_sphere_radius, occupied_sphere_radius
+        )
         return cls(esdf_map_raw)
 
     def update(self, camera_pose: CameraPose, point_cloud: np.ndarray) -> None:
