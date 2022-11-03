@@ -7,8 +7,8 @@
 
 #include <glog/logging.h>
 
-#include "voxblox/Block.pb.h"
-#include "voxblox/Layer.pb.h"
+#include "proto/voxblox/Block.pb.h"
+#include "proto/voxblox/Layer.pb.h"
 #include "voxblox/core/block.h"
 #include "voxblox/core/block_hash.h"
 #include "voxblox/core/common.h"

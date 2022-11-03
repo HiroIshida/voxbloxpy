@@ -4,8 +4,8 @@
 #include <fstream>
 #include <string>
 
-#include "voxblox/Block.pb.h"
-#include "voxblox/Layer.pb.h"
+#include "proto/voxblox/Block.pb.h"
+#include "proto/voxblox/Layer.pb.h"
 #include "voxblox/utils/protobuf_utils.h"
 
 namespace voxblox {

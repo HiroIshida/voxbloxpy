@@ -13,8 +13,8 @@
 #include <google/protobuf/message.h>
 #include <google/protobuf/message_lite.h>
 
-#include "voxblox/Block.pb.h"
-#include "voxblox/Layer.pb.h"
+#include "proto/voxblox/Block.pb.h"
+#include "proto/voxblox/Layer.pb.h"
 #include "voxblox/core/block.h"
 #include "voxblox/core/voxel.h"
 #include "voxblox/utils/protobuf_utils.h"
