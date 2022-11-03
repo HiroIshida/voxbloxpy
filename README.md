@@ -33,7 +33,7 @@ Note: Dependency on `libgoogle-glog-dev` is kind of a pain, though it can be res
 git clone https://github.com/HiroIshida/voxbloxpy.git
 cd voxbloxpy
 git submodule update --init
-sudo apt-get install libeigen3-dev libgtest-dev libgflags-dev libgoogle-glog-dev libprotobuf-dev
+sudo apt-get install libeigen3-dev libgtest-dev libgflags-dev libgoogle-glog-dev libprotobuf-dev protobuf-compiler
 pip3 install -e .
 ```
 
