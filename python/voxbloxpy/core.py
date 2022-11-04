@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from enum import Enum
 from typing import Any, Optional, Tuple
 
 import numpy as np
@@ -6,6 +7,12 @@ import plotly.graph_objects as go
 from scipy.interpolate import RegularGridInterpolator
 
 from . import _voxbloxpy
+
+
+class IntegratorType(Enum):
+    SIMPLE = _voxbloxpy.TsdfIntegratorType.kSimple
+    FAST = _voxbloxpy.TsdfIntegratorType.kFast
+    MERGED = _voxbloxpy.TsdfIntegratorType.kMerged
 
 
 @dataclass
@@ -143,9 +150,14 @@ class EsdfMap:
         voxels_per_side: int = 16,
         clear_sphere_radius: float = 1.5,
         occupied_sphere_radius: float = 4.0,
+        integrator_type: IntegratorType = IntegratorType.FAST,
     ) -> "EsdfMap":
         esdf_map_raw = _voxbloxpy.EsdfMap(
-            voxel_size, voxels_per_side, clear_sphere_radius, occupied_sphere_radius
+            voxel_size,
+            voxels_per_side,
+            clear_sphere_radius,
+            occupied_sphere_radius,
+            integrator_type.value,
         )
         return cls(esdf_map_raw)
 

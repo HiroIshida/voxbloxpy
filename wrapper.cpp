@@ -1,5 +1,6 @@
 #include <Eigen/Core>
 #include <iostream>
+#include <stdexcept>
 #include <utility>
 #include <vector>
 
@@ -24,16 +25,18 @@ using namespace voxblox;
 
 
 class PyTsdfMap {
- public:
+
+public:
   std::shared_ptr<TsdfMap> tsdf_map_;
   std::unique_ptr<TsdfIntegratorBase> tsdf_integrator_;
   float voxel_size_;
   int voxels_per_side_;
 
- public:
-  PyTsdfMap(float voxel_size, int voxels_per_side) : PyTsdfMap(Layer<TsdfVoxel>(voxel_size, voxels_per_side)) {}
+public:
+  PyTsdfMap(float voxel_size, int voxels_per_side, TsdfIntegratorType integrator_type)
+    : PyTsdfMap(Layer<TsdfVoxel>(voxel_size, voxels_per_side), integrator_type) {}
 
-  PyTsdfMap(const Layer<TsdfVoxel>& tsdf_layer) {
+  PyTsdfMap(const Layer<TsdfVoxel>& tsdf_layer, TsdfIntegratorType integrator_type) {
     tsdf_map_.reset(new TsdfMap(tsdf_layer));
     voxel_size_ = tsdf_layer.voxel_size();
     voxels_per_side_ = tsdf_layer.voxels_per_side();
@@ -41,7 +44,16 @@ class PyTsdfMap {
     TsdfIntegratorBase::Config config;
     config.default_truncation_distance = 4 * tsdf_layer.voxel_size();
     config.integrator_threads = 1;
-    tsdf_integrator_.reset(new FastTsdfIntegrator(config, tsdf_map_->getTsdfLayerPtr()));
+
+    if(integrator_type == TsdfIntegratorType::kSimple){
+      tsdf_integrator_.reset(new SimpleTsdfIntegrator(config, tsdf_map_->getTsdfLayerPtr()));
+    }else if(integrator_type == TsdfIntegratorType::kMerged){
+      tsdf_integrator_.reset(new MergedTsdfIntegrator(config, tsdf_map_->getTsdfLayerPtr()));
+    }else if(integrator_type == TsdfIntegratorType::kFast){
+      tsdf_integrator_.reset(new FastTsdfIntegrator(config, tsdf_map_->getTsdfLayerPtr()));
+    }else{
+      throw std::invalid_argument("invalid initegrator type");
+    }
   }
 
   void update(std::vector<double> camera_pose, std::vector<std::vector<double>> point_cloud_std)
@@ -75,14 +87,14 @@ class PyEsdfMap {
   int voxels_per_side_;
 
  public:
-  PyEsdfMap(float voxel_size, int voxels_per_side, float clear_sphere_radius, float occupied_sphere_radius)
-    : PyEsdfMap(Layer<EsdfVoxel>(voxel_size, voxels_per_side), clear_sphere_radius, occupied_sphere_radius) {}
+  PyEsdfMap(float voxel_size, int voxels_per_side, float clear_sphere_radius, float occupied_sphere_radius, TsdfIntegratorType tsdf_integrator_type)
+    : PyEsdfMap(Layer<EsdfVoxel>(voxel_size, voxels_per_side), clear_sphere_radius, occupied_sphere_radius, tsdf_integrator_type) {}
 
-  PyEsdfMap(const Layer<EsdfVoxel>& esdf_layer, float clear_sphere_radius, float occupied_sphere_radius) {
+  PyEsdfMap(const Layer<EsdfVoxel>& esdf_layer, float clear_sphere_radius, float occupied_sphere_radius, TsdfIntegratorType tsdf_integrator_type) {
     esdf_map_.reset(new EsdfMap(esdf_layer));
     voxel_size_ = esdf_layer.voxel_size();
     voxels_per_side_ = esdf_layer.voxels_per_side();
-    tsdf_map_.reset(new PyTsdfMap(esdf_layer.voxel_size(), esdf_layer.voxels_per_side()));
+    tsdf_map_.reset(new PyTsdfMap(esdf_layer.voxel_size(), esdf_layer.voxels_per_side(), tsdf_integrator_type));
 
     EsdfIntegrator::Config esdf_config;
     esdf_config.max_distance_m = 4.0f;
@@ -275,7 +287,7 @@ PyEsdfMap get_test_esdf(float voxel_size, int num_poses, int resol_x, int resol_
     std::cout << "**update esdf" << std::endl;
   }
 
-  const auto esdf_map = PyEsdfMap(incremental_layer, 1.5, 4.0);
+  const auto esdf_map = PyEsdfMap(incremental_layer, 1.5, 4.0, TsdfIntegratorType::kFast);
   std::cout << "**finish creating esdf map"<< std::endl;
   return esdf_map;
 }
@@ -285,14 +297,19 @@ PYBIND11_MODULE(_voxbloxpy, m) {
   m.doc() = "voxblox python wrapper";
   m.def("get_test_esdf", &get_test_esdf);
 
+  py::enum_<TsdfIntegratorType>(m, "TsdfIntegratorType")
+      .value("kSimple", TsdfIntegratorType::kSimple)
+      .value("kMerged", TsdfIntegratorType::kMerged)
+      .value("kFast", TsdfIntegratorType::kFast);
+
   py::class_<PyTsdfMap>(m, "TsdfMap")
-      .def(py::init<float, int>())
+      .def(py::init<float, int, TsdfIntegratorType>())
       .def("update", &PyTsdfMap::update)
       .def_readonly("voxel_size", &PyTsdfMap::voxel_size_)
       .def_readonly("voxels_per_side", &PyTsdfMap::voxels_per_side_);
 
   py::class_<PyEsdfMap>(m, "EsdfMap")
-      .def(py::init<float, int, float, float>())
+      .def(py::init<float, int, float, float, TsdfIntegratorType>())
       .def("get_sd_batch", &PyEsdfMap::get_sd_batch)
       .def("update", &PyEsdfMap::update)
       .def("get_num_alloc_block", &PyEsdfMap::getNumberOfAllocatedBlocks)
