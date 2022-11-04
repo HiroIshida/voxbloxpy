@@ -1,4 +1,4 @@
-# voxbloxpy [![CI](https://github.com/HiroIshida/voxbloxpy/actions/workflows/test.yaml/badge.svg)](https://github.com/HiroIshida/voxbloxpy/actions/workflows/test.yaml) [![pypi-version](https://badge.fury.io/py/voxbloxpy.svg)](https://pypi.org/project/voxbloxpy/)
+# voxbloxpy [![CI](https://github.com/HiroIshida/voxbloxpy/actions/workflows/test.yaml/badge.svg)](https://github.com/HiroIshida/voxbloxpy/actions/workflows/test.yaml) [![pypi-version](https://img.shields.io/pypi/v/voxbloxpy.svg)](https://pypi.org/project/voxbloxpy/)
 
 [voxblox](https://github.com/ethz-asl/voxblox) is a ROS-based revolutionary project for online creation of signed distance field. This repository `voxbloxpy` provides the python-wrapper of the [voxblox](https://github.com/ethz-asl/voxblox) and some utils for volumetric rendering using `plotly`. This python package is **standalone**, that is, the package is ros-dependencies-free and can be installed from pypi.
 
@@ -18,7 +18,15 @@ This project is just a wrapper. So, please cite the paper (Oleynikova+, IROS 201
 }
 ```
 
+# Usage
+```python
+from voxbloxpy import EsdfMap, CameraPose
 
+esdf = EsdfMap(0.02)  # voxel size in meter
+camera_pose = CameraPose(pos, quat_wxyz)  # set camera pose wrt world
+esdf.udpate(camera_pose, cloud_wrt_camera)  # able to update as many as you want with different camera-cloud pair
+sd_values = esdf.get_sd_batch(pts_wrt_world)
+```
 
 # installation
 **NOTE: ROS not required**
