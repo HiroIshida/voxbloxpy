@@ -2,6 +2,8 @@
 
 [voxblox](https://github.com/ethz-asl/voxblox) is a ROS-based revolutionary project for online creation of signed distance field. This repository `voxbloxpy` provides the python-wrapper of the [voxblox](https://github.com/ethz-asl/voxblox) and some utils for volumetric rendering using `plotly`. This python package is **standalone**, that is, the package is ros-dependencies-free and can be installed from pypi.
 
+The wrapper's core source code can be found in [`wrapper.cpp`](wrapper.cpp) (lower-level) and [`python/voxbloxpy`](python/voxbloxpy) (higher-level) directory.
+
 The following animation is created using point cloud collected by a robot rotating in our lab.
 
 https://user-images.githubusercontent.com/38597814/199616755-02bcaed4-1170-4d88-87d2-995a67663d41.mp4
