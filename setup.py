@@ -3,6 +3,7 @@ from skbuild import setup
 install_requires = [
     "numpy",
     "plotly",
+    "scipy"
 ]
 
 setup(

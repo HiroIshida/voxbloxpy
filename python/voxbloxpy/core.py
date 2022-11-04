@@ -1,8 +1,9 @@
 from dataclasses import dataclass
-from typing import Any, Tuple
+from typing import Any, Optional, Tuple
 
 import numpy as np
 import plotly.graph_objects as go
+from scipy.interpolate import RegularGridInterpolator
 
 from . import _voxbloxpy
 
@@ -23,8 +24,12 @@ class Grid:
     ub: np.ndarray
     sizes: Tuple[int, int, int]
 
-    def get_meshgrid(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def get_linspaces(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         xlin, ylin, zlin = [np.linspace(self.lb[i], self.ub[i], self.sizes[i]) for i in range(3)]
+        return xlin, ylin, zlin
+
+    def get_meshgrid(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+        xlin, ylin, zlin = self.get_linspaces()
         X, Y, Z = np.meshgrid(xlin, ylin, zlin)
         return X, Y, Z
 
@@ -34,9 +39,27 @@ class GridSDF:
     grid: Grid
     values: np.ndarray
     fill_value: float
+    itp: Optional[RegularGridInterpolator] = None
+    create_itp_lazy: bool = False
 
     def __post_init__(self):
         assert np.prod(self.grid.sizes) == len(self.values)
+        if not self.create_itp_lazy:
+            self._compute_interpolator()
+
+    def __call__(self, pts: np.ndarray) -> np.ndarray:
+        assert pts.ndim == 2
+        if self.itp is None:
+            self._compute_interpolator()
+            assert self.itp is not None
+        return self.itp(pts)
+
+    def _compute_interpolator(self, bounds_error: bool = False):
+        xlin, ylin, zlin = self.grid.get_linspaces()
+        data = np.reshape(self.values, (len(xlin), len(ylin), len(zlin)))
+        self.itp = RegularGridInterpolator(
+            (xlin, ylin, zlin), data, bounds_error=bounds_error, fill_value=self.fill_value
+        )
 
     def render_volume(
         self, isomin: float = -0.5, isomax: float = 2.0, show: bool = True
@@ -149,11 +172,13 @@ class EsdfMap:
         dists[dists > fill_value_internal - 1] = fill_value
         return dists
 
-    def get_grid_sdf(self, grid: Grid, fill_value: float = np.nan) -> GridSDF:
+    def get_grid_sdf(
+        self, grid: Grid, fill_value: float = np.nan, create_itp_lazy: bool = False
+    ) -> GridSDF:
         X, Y, Z = grid.get_meshgrid()
         pts = np.array(list(zip(X.flatten(), Y.flatten(), Z.flatten())))
         values = self.get_sd_batch(pts, fill_value=fill_value)
-        return GridSDF(grid, values, fill_value)
+        return GridSDF(grid, values, fill_value, create_itp_lazy=create_itp_lazy)
 
     @property
     def voxel_size(self) -> int:

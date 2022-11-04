@@ -29,7 +29,7 @@ def hook(esdf_map: EsdfMap):
     ts = time.time()
     info = esdf_map.get_voxel_info()
     measure_grid = info.get_boundary_grid(grid_size=0.1)
-    grid_sdf = esdf_map.get_grid_sdf(measure_grid)
+    grid_sdf = esdf_map.get_grid_sdf(measure_grid, create_itp_lazy=True)
     grid_sdf_list.append(grid_sdf)
     te = time.time()
     rospy.loginfo("elapsed time for getting gridsdf {} sec".format(te - ts))
