@@ -8,7 +8,7 @@ install_requires = [
 
 setup(
     name="voxbloxpy",
-    version="0.0.1",
+    version="0.0.2",
     description="standalone voxblox python",
     author="Hirokazu Ishida",
     license="MIT",
