@@ -22,6 +22,14 @@
 namespace py = pybind11;
 using namespace voxblox;
 
+void func(){
+  Layer<TsdfVoxel> layer(0.2, 16);
+  TsdfIntegratorBase::Config integ_config;
+  std::unique_ptr<TsdfIntegratorBase> tsdf_integrator;
+  tsdf_integrator.reset(new MergedTsdfIntegrator(integ_config, &layer));
+  // tsdf_integrator.reset(new FastTsdfIntegrator(integ_config, &layer));
+}
+
 
 class PyTsdfMap {
  public:
@@ -284,6 +292,7 @@ PyEsdfMap get_test_esdf(float voxel_size, int num_poses, int resol_x, int resol_
 PYBIND11_MODULE(_voxbloxpy, m) {
   m.doc() = "voxblox python wrapper";
   m.def("get_test_esdf", &get_test_esdf);
+  m.def("hoge", &func);
 
   py::class_<PyTsdfMap>(m, "TsdfMap")
       .def(py::init<float, int>())
