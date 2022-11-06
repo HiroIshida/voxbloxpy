@@ -76,6 +76,9 @@ class GridSDF:
         if not self.create_itp_lazy:
             self._compute_interpolator()
 
+    def is_finite(self) -> bool:
+        return bool(np.all(np.isfinite(self.values)))
+
     def __call__(self, pts: np.ndarray) -> np.ndarray:
         assert pts.ndim == 2
         if self.itp is None:
