@@ -35,3 +35,5 @@ if __name__ == "__main__":
 
     if visualize:
         gridsdf.render_volume(isomin=-0.1, isomax=0.2)
+        gridsdf_comp = gridsdf.get_quantized()
+        gridsdf_comp.render_volume(isomin=-0.1, isomax=0.2)

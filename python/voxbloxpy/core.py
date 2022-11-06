@@ -1,3 +1,4 @@
+import copy
 from dataclasses import dataclass
 from enum import Enum
 from typing import Any, Optional, Tuple
@@ -40,6 +41,11 @@ class Grid:
         X, Y, Z = np.meshgrid(xlin, ylin, zlin, indexing=indexing)
         return X, Y, Z
 
+    @property
+    def resolutsions(self) -> np.ndarray:
+        resols = (self.ub - self.lb) / (np.array(self.sizes) - 1.0)
+        return resols
+
 
 @dataclass
 class GridSDF:
@@ -48,6 +54,22 @@ class GridSDF:
     fill_value: float
     itp: Optional[RegularGridInterpolator] = None
     create_itp_lazy: bool = False
+
+    def get_quantized(self) -> "GridSDF":
+        """quantize the sd values to well compressed by gzip"""
+        ret = copy.deepcopy(self)
+        resol_fine = np.min(self.grid.resolutsions) * 0.1
+        resol_rough = 0.01
+        indices_fine = ret.values <= 0.1
+        indices_rough = ret.values > 0.1
+        copy.deepcopy(ret.values)
+        ret.values[indices_fine] = (
+            np.floor_divide(ret.values[indices_fine], resol_fine) * resol_fine
+        )
+        ret.values[indices_rough] = (
+            np.floor_divide(ret.values[indices_rough], resol_rough) * resol_rough
+        )
+        return ret
 
     def __post_init__(self):
         assert np.prod(self.grid.sizes) == len(self.values)

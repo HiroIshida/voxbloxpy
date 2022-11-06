@@ -70,6 +70,7 @@ class TestGroup:
         sphere.sdf(pts_concat)
 
     def test_synthetic_esdf_value(self, esdf: EsdfMap):
+
         def check(dist_from_surface: float, admissible_rate: float):
             pts_sphere = self.create_sphere_points(self.radius + dist_from_surface)
             sd_values = esdf.get_sd_batch(pts_sphere)
@@ -81,3 +82,8 @@ class TestGroup:
         check(0.05, 0.95)
         check(0.1, 0.9)
         check(0.2, 0.7)
+
+    def test_quantization(self, esdf: EsdfMap):
+        grid = esdf.get_voxel_info().get_boundary_grid(grid_size=0.01)
+        grid_sdf = esdf.get_grid_sdf(grid)
+        grid_sdf.get_quantized()
