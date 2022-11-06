@@ -35,9 +35,9 @@ class Grid:
         xlin, ylin, zlin = [np.linspace(self.lb[i], self.ub[i], self.sizes[i]) for i in range(3)]
         return xlin, ylin, zlin
 
-    def get_meshgrid(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    def get_meshgrid(self, indexing: str = "xy") -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
         xlin, ylin, zlin = self.get_linspaces()
-        X, Y, Z = np.meshgrid(xlin, ylin, zlin)
+        X, Y, Z = np.meshgrid(xlin, ylin, zlin, indexing=indexing)
         return X, Y, Z
 
 
@@ -187,7 +187,7 @@ class EsdfMap:
     def get_grid_sdf(
         self, grid: Grid, fill_value: float = np.nan, create_itp_lazy: bool = False
     ) -> GridSDF:
-        X, Y, Z = grid.get_meshgrid()
+        X, Y, Z = grid.get_meshgrid(indexing="ij")
         pts = np.array(list(zip(X.flatten(), Y.flatten(), Z.flatten())))
         values = self.get_sd_batch(pts, fill_value=fill_value)
         return GridSDF(grid, values, fill_value, create_itp_lazy=create_itp_lazy)
