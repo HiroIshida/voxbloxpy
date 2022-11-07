@@ -29,9 +29,9 @@ RUN  cat python_versions.txt | while read version; do pyenv install $version ; d
 
 # update cmake to 3.20
 RUN sudo apt-get remove cmake
-RUN wget -nv https://cmake.org/files/v3.20/cmake-3.20.0-rc1-linux-x86_64.tar.gz
-RUN tar -xf cmake-3.20.0-rc1-linux-x86_64.tar.gz 
-RUN sudo ln -sf ~/cmake-3.20.0-rc1-linux-x86_64/bin/* /usr/bin
+RUN wget -nv https://cmake.org/files/v3.20/cmake-3.20.0-rc1-linux-$(uname -m).tar.gz
+RUN tar -xf cmake-3.20.0-rc1-linux-$(uname -m).tar.gz
+RUN sudo ln -sf ~/cmake-3.20.0-rc1-linux-$(uname -m)/bin/* /usr/bin
 
 # Prebuild 
 RUN sudo apt-get install -y libeigen3-dev libgtest-dev libgflags-dev libgoogle-glog-dev libprotobuf-dev protobuf-compiler
@@ -49,7 +49,7 @@ RUN \
 
 RUN \
     cd voxbloxpy && \
-    cat ../python_versions.txt | while read version; do pyenv global $version && python setup.py bdist_wheel -p manylinux1_x86_64; done
+    cat ../python_versions.txt | while read version; do pyenv global $version && python setup.py bdist_wheel -p manylinux2014_$(uname -m); done
 
 COPY check_glibcxx.sh $HOME/
 RUN bash ./check_glibcxx.sh
